@@ -145,7 +145,7 @@ function getEpg() {
 			
 			if (
 				(tuner.types.indexOf(channel.type) === -1) ||
-				(fs.existsSync('./data/tuner.' + tuner.n.toString(10) + '.lock') === true)
+				(lockTuner(tuner) === false)
 			) {
 				tuner = null;
 				continue;
@@ -160,10 +160,17 @@ function getEpg() {
 			return;
 		}
 		
-		// チューナーをロック
-		fs.writeFileSync('./data/tuner.' + tuner.n.toString(10) + '.lock', '');
-		util.log('LOCK: ' + tuner.name + ' (n=' + tuner.n.toString(10) + ')');
-		
+		function lockTuner(tuner) {
+			// チューナーをロック
+			try {
+				fs.symlinkSync('dummy', './data/tuner.' + tuner.n.toString(10) + '.lock');
+				util.log('LOCK: ' + tuner.name + ' (n=' + tuner.n.toString(10) + ')');
+				return true;
+			} catch(e) { 
+				return false;
+			}
+		}
+
 		function unlockTuner() {
 			// チューナーのロックを解除
 			try {

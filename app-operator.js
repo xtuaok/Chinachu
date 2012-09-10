@@ -286,7 +286,7 @@ function doRecord(program) {
 		
 		if (
 			(tuner.types.indexOf(program.channel.type) === -1) ||
-			(fs.existsSync('./data/tuner.' + tuner.n.toString(10) + '.lock') === true)
+			(lockTuner(tuner) === false)
 		) {
 			tuner = null;
 			continue;
@@ -305,9 +305,17 @@ function doRecord(program) {
 	}
 	
 	// チューナーをロック
+	function lockTuner(tuner) {
+		try {
+			fs.symlinkSync('dummy', './data/tuner.' + tuner.n.toString(10) + '.lock');
+			util.log('LOCK: ' + tuner.name + ' (n=' + tuner.n.toString(10) + ')');
+			return true;
+		} catch(e) {
+			return false;
+		}
+	}
+
 	var tunerLockFile = './data/tuner.' + tuner.n.toString(10) + '.lock';
-	fs.writeFileSync(tunerLockFile, '');
-	util.log('LOCK: ' + tuner.name + ' (n=' + tuner.n.toString(10) + ')');
 	program.tuner = tuner;
 	program.tuner.lock = tunerLockFile;
 	
